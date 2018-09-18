@@ -3,11 +3,8 @@ from setuptools import setup, find_packages
 version = '1.8'
 
 def readme():
-    try:
-        f = open('README.md')
+    with open('README.md', 'r') as f:
         return f.read()
-    finally:
-        f.close()
 
 setup(name='cstruct',
       version=version,
@@ -18,7 +15,6 @@ Convert C struct definitions into Python classes with methods for serializing/de
           'Operating System :: OS Independent',
           'Programming Language :: Python',
           'Topic :: Software Development :: Libraries :: Python Modules',
-          'Programming Language :: Python :: 2.5',
           'Programming Language :: Python :: 2.6',
           'Programming Language :: Python :: 2.7',
           'Programming Language :: Python :: 3',
