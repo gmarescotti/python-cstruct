@@ -1,6 +1,7 @@
+#!/usr/bin/env python
 from setuptools import setup, find_packages
 
-version = '1.8'
+version = '1.9'
 
 def readme():
     with open('README.md', 'r') as f:
