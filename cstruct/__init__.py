@@ -315,6 +315,15 @@ class CStruct(_CStructParent):
         for key, value in kargs.items():
             setattr(self, key, value)
 
+    def _apply_endianness_tms320(self, field, data, i):
+        # print("OOOODDDD", field, data[i], i)
+        t, n = self.__fields_types__[field]
+        if t.endswith("32"):
+            # for arr_i in range(n):
+            if n == 1 and len(data) > 0:
+                return ((data[i])>>16 | (data[i])<<16) & 0xffff_ffff
+        return data[i]
+
     def unpack(self, string):
         """
         Unpack the string containing packed C structure data
@@ -344,7 +353,9 @@ class CStruct(_CStructParent):
                         sub_structs.append(sub_struct)
                     setattr(self, field, sub_structs)
             elif vlen == 1:
-                setattr(self, field, data[i])
+                ret = self._apply_endianness_tms320(field, data, i)
+                # setattr(self, field, data[i])
+                setattr(self, field, ret)
                 i = i + vlen
             else:
                 setattr(self, field, list(data[i:i+vlen]))
@@ -379,7 +390,9 @@ class CStruct(_CStructParent):
                             v = ([bytes([x]) for x in v])
                         data.extend(v)
             elif vlen == 1:
-                data.append(getattr(self, field))
+                value = getattr(self, field)
+                value = self._apply_endianness_tms320(field, [value], 0)
+                data.append(value)
             else:
                 v = getattr(self, field)
                 v = v[:vlen] + [0] * (vlen - len(v))
