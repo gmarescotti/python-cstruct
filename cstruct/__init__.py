@@ -112,10 +112,15 @@ __all__ = ['LITTLE_ENDIAN',
            'CStruct',
            'define',
            'typedef',
+           'TMS320_BIG_ENDIAN',
+           'TMS320_LITTLE_ENDIAN',
           ]
 
 LITTLE_ENDIAN = '<'
 BIG_ENDIAN = '>'
+
+TMS320_LITTLE_ENDIAN = ' <'
+TMS320_BIG_ENDIAN = ' >'
 
 C_TYPE_TO_FORMAT = {
     'char':                 's',
@@ -183,7 +188,7 @@ class CStructMeta(type):
         if __struct__ is not None:
             dict['__fmt__'], dict['__fields__'], dict['__fields_types__'] = mcs.parse_struct(__struct__)
             if '__byte_order__' in dict:
-                dict['__fmt__'] = dict['__byte_order__'] + dict['__fmt__']
+                dict['__fmt__'] = dict['__byte_order__'].strip() + dict['__fmt__'] # Added strip to support TMS320 Endianness
             # Add the missing fields to the class
             for field in dict['__fields__']:
                 if field not in dict:
@@ -353,9 +358,12 @@ class CStruct(_CStructParent):
                         sub_structs.append(sub_struct)
                     setattr(self, field, sub_structs)
             elif vlen == 1:
-                ret = self._apply_endianness_tms320(field, data, i)
-                # setattr(self, field, data[i])
-                setattr(self, field, ret)
+                # if self.__byte_order__ in (TMS320_BIG_ENDIAN):
+                if self.__byte_order__ in (TMS320_BIG_ENDIAN, TMS320_LITTLE_ENDIAN):
+                    ret = self._apply_endianness_tms320(field, data, i)
+                    setattr(self, field, ret)
+                else:
+                    setattr(self, field, data[i])
                 i = i + vlen
             else:
                 setattr(self, field, list(data[i:i+vlen]))
@@ -391,7 +399,9 @@ class CStruct(_CStructParent):
                         data.extend(v)
             elif vlen == 1:
                 value = getattr(self, field)
-                value = self._apply_endianness_tms320(field, [value], 0)
+                # if self.__byte_order__ in (TMS320_BIG_ENDIAN):
+                if self.__byte_order__ in (TMS320_BIG_ENDIAN, TMS320_LITTLE_ENDIAN):
+                    value = self._apply_endianness_tms320(field, [value], 0)
                 data.append(value)
             else:
                 v = getattr(self, field)
