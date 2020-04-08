@@ -106,16 +106,22 @@ __date__ = '15 August 2013'
 import re
 import struct
 import sys
+import numpy
 
 __all__ = ['LITTLE_ENDIAN',
            'BIG_ENDIAN',
            'CStruct',
            'define',
            'typedef',
+           'TMS320_BIG_ENDIAN',
+           'TMS320_LITTLE_ENDIAN',
           ]
 
 LITTLE_ENDIAN = '<'
 BIG_ENDIAN = '>'
+
+TMS320_LITTLE_ENDIAN = ' <'
+TMS320_BIG_ENDIAN = ' >'
 
 C_TYPE_TO_FORMAT = {
     'char':                 's',
@@ -183,7 +189,7 @@ class CStructMeta(type):
         if __struct__ is not None:
             dict['__fmt__'], dict['__fields__'], dict['__fields_types__'] = mcs.parse_struct(__struct__)
             if '__byte_order__' in dict:
-                dict['__fmt__'] = dict['__byte_order__'] + dict['__fmt__']
+                dict['__fmt__'] = dict['__byte_order__'].strip() + dict['__fmt__']
             # Add the missing fields to the class
             for field in dict['__fields__']:
                 if field not in dict:
@@ -315,12 +321,19 @@ class CStruct(_CStructParent):
         for key, value in kargs.items():
             setattr(self, key, value)
 
+    def endianize(self, data):
+        data = data + bytes(len(data)%2)  # Rendo data length numero pari
+        return numpy.frombuffer(data, numpy.dtype('<h')).byteswap().tostring()
+    
     def unpack(self, string):
         """
         Unpack the string containing packed C structure data
         """
         if string is None:
             string = CHAR_ZERO * self.__size__
+        if self.__byte_order__ in (TMS320_BIG_ENDIAN, TMS320_LITTLE_ENDIAN):
+            string = self.endianize(string)
+        print(len(string), string.hex())
         data = struct.unpack(self.__fmt__, string)
         i = 0
         for field in self.__fields__:
@@ -384,7 +397,14 @@ class CStruct(_CStructParent):
                 v = getattr(self, field)
                 v = v[:vlen] + [0] * (vlen - len(v))
                 data.extend(v)
-        return struct.pack(self.__fmt__, *data)
+
+        ret = struct.pack(self.__fmt__, *data)
+
+        if self.__byte_order__ in (TMS320_BIG_ENDIAN, TMS320_LITTLE_ENDIAN):
+            print(ret)
+            ret = self.endianize(ret)
+
+        return ret
 
     def clear(self):
         self.unpack(None)
