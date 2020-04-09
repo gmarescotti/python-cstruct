@@ -328,7 +328,7 @@ class CStruct(_CStructParent):
         return numpy.frombuffer(data, numpy.dtype('<h')).byteswap().tostring()
 
     def _apply_endianness_tms320(self, field, data, i):
-        return data[i]
+        # return data[i]
         # print("OOOODDDD", field, data[i], i)
         t, n = self.__fields_types__[field]
         if t.endswith("32"):
