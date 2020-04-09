@@ -106,6 +106,7 @@ __date__ = '15 August 2013'
 import re
 import struct
 import sys
+import numpy
 
 __all__ = ['LITTLE_ENDIAN',
            'BIG_ENDIAN',
@@ -320,7 +321,14 @@ class CStruct(_CStructParent):
         for key, value in kargs.items():
             setattr(self, key, value)
 
+    def endianize_16(self, data):
+        if self.__byte_order__ not in (TMS320_BIG_ENDIAN, TMS320_LITTLE_ENDIAN):
+            return data
+        assert type(data) is bytes, "???????????????????????????????????"
+        return numpy.frombuffer(data, numpy.dtype('<h')).byteswap().tostring()
+
     def _apply_endianness_tms320(self, field, data, i):
+        return data[i]
         # print("OOOODDDD", field, data[i], i)
         t, n = self.__fields_types__[field]
         if t.endswith("32"):
@@ -340,7 +348,7 @@ class CStruct(_CStructParent):
         for field in self.__fields__:
             (vtype, vlen) = self.__fields_types__[field]
             if vtype == 'char': # string
-                setattr(self, field, data[i])
+                setattr(self, field, self.endianize_16(data[i]))
                 i = i + 1
             elif isinstance(vtype, CStructMeta):
                 num = int(vlen / vtype.size)
@@ -377,7 +385,7 @@ class CStruct(_CStructParent):
         for field in self.__fields__:
             (vtype, vlen) = self.__fields_types__[field]
             if vtype == 'char': # string
-                data.append(getattr(self, field))
+                data.append(self.endianize_16(getattr(self, field)))
             elif isinstance(vtype, CStructMeta):
                 num = int(vlen / vtype.size)
                 if num == 1: # single struct
