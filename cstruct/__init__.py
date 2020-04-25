@@ -334,7 +334,7 @@ class CStruct(_CStructParent):
         if t.endswith("32"):
             # for arr_i in range(n):
             if n == 1 and len(data) > 0:
-                return ((data[i])>>16 | (data[i])<<16) & 0xffff_ffff
+                return ((data[i])>>16 | (data[i])<<16) & 0xffffffff
         return data[i]
 
     def unpack(self, string):
