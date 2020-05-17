@@ -106,7 +106,6 @@ __date__ = '15 August 2013'
 import re
 import struct
 import sys
-import numpy
 
 __all__ = ['LITTLE_ENDIAN',
            'BIG_ENDIAN',
@@ -322,6 +321,7 @@ class CStruct(_CStructParent):
             setattr(self, key, value)
 
     def endianize_16(self, data):
+        import numpy
         if self.__byte_order__ not in (TMS320_BIG_ENDIAN, TMS320_LITTLE_ENDIAN):
             return data
         assert type(data) is bytes, "???????????????????????????????????"

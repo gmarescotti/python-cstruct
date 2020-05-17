@@ -40,7 +40,7 @@ Convert C struct definitions into Python classes with methods for serializing/de
       include_package_data=True,
       zip_safe=True,
       install_requires=[
-          # -*- Extra requirements: -*-
+          'numpy' # -*- Extra requirements: -*-
       ],
       entry_points="""
       # -*- Entry points: -*-
